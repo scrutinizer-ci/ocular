@@ -1,0 +1,42 @@
+<?php
+
+namespace Scrutinizer\Ocular;
+
+use JMS\Serializer\SerializerBuilder;
+use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Input\InputOption;
+
+class Ocular extends Application
+{
+    const VERSION = '@version@';
+
+    private $cfg;
+
+    public function __construct()
+    {
+        $this->cfg = $this->loadConfiguration();
+        parent::__construct('ocular', self::VERSION);
+    }
+
+    protected function getDefaultInputDefinition()
+    {
+        $definition = parent::getDefaultInputDefinition();
+        $definition->addOption(new InputOption('access-token', null, InputOption::VALUE_REQUIRED, 'The access token to use when communicating with scrutinizer-ci.com', $this->cfg->getAccessToken()));
+
+        return $definition;
+    }
+
+    private function loadConfiguration()
+    {
+        $homeDir = getenv('HOME');
+        if ( ! is_file($homeDir.'/.ocular/config.json')) {
+            return new Configuration();
+        }
+
+        return SerializerBuilder::create()->build()->deserialize(
+            file_get_contents($homeDir.'/.ocular/config.json'),
+            'Scrutinizer\Ocular\Configuration',
+            'json'
+        );
+    }
+}

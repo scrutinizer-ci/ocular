@@ -1,0 +1,17 @@
+{
+    "name": "scrutinizer/ocular",
+
+    "autoload": {
+        "psr-0": {
+            "Scrutinizer\\Ocular\\": "src/"
+        }
+    },
+
+    "require": {
+        "symfony/console": "~2.0",
+        "symfony/process": "~2.3",
+        "phpoption/phpoption": "~1.0",
+        "guzzle/guzzle": "~3.0",
+        "jms/serializer": "~0.13"
+    }
+}
