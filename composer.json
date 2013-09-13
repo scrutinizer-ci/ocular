@@ -1,6 +1,7 @@
 {
     "name": "scrutinizer/ocular",
 
+    "bin": ["bin/ocular"],
     "autoload": {
         "psr-0": {
             "Scrutinizer\\Ocular\\": "src/"

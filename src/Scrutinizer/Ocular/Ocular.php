@@ -16,6 +16,8 @@ class Ocular extends Application
     {
         $this->cfg = $this->loadConfiguration();
         parent::__construct('ocular', self::VERSION);
+
+        $this->registerCommands();
     }
 
     protected function getDefaultInputDefinition()
@@ -24,6 +26,11 @@ class Ocular extends Application
         $definition->addOption(new InputOption('access-token', null, InputOption::VALUE_REQUIRED, 'The access token to use when communicating with scrutinizer-ci.com', $this->cfg->getAccessToken()));
 
         return $definition;
+    }
+
+    private function registerCommands()
+    {
+        $this->add(new Command\CodeCoverage\UploadCommand());
     }
 
     private function loadConfiguration()

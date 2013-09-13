@@ -11,7 +11,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Process;
 
-class UploadCodeCoverageCommand extends Command
+class UploadCommand extends Command
 {
     protected function configure()
     {
