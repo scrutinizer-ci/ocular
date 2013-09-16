@@ -36,7 +36,7 @@ class UploadCommand extends Command
         $repositoryName = $this->parseRepositoryName($input->getOption('repository'));
 
         $client = new Client('https://scrutinizer-ci.com/api{?access_token}', array(
-            'access_token' => $input->getOption('access_token'),
+            'access_token' => $input->getOption('access-token'),
         ));
 
         $output->write(sprintf('Uploading code coverage for repository "%s" and revision "%s"... ', $repositoryName, $revision));
