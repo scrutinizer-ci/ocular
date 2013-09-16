@@ -2,6 +2,7 @@
 
 namespace Scrutinizer\Ocular\Command\CodeCoverage;
 
+use Guzzle\Plugin\Backoff\BackoffPlugin;
 use Guzzle\Service\Client;
 use Scrutinizer\Ocular\Util\RepositoryIntrospector;
 use Symfony\Component\Console\Command\Command;
@@ -35,14 +36,18 @@ class UploadCommand extends Command
         $revision = $this->parseRevision($input->getOption('revision'));
         $repositoryName = $this->parseRepositoryName($input->getOption('repository'));
 
-        $client = new Client('https://scrutinizer-ci.com/api{?access_token}', array(
+        $client = new Client('https://scrutinizer-ci.com/api/{?access_token}', array(
             'access_token' => $input->getOption('access-token'),
+            'request.options' => array(
+                'Content-Type' => 'application/json',
+            )
         ));
+        $client->addSubscriber(BackoffPlugin::getExponentialBackoff());
 
         $output->write(sprintf('Uploading code coverage for repository "%s" and revision "%s"... ', $repositoryName, $revision));
         $client->post(
-            'repositories/'.$repositoryName.'/data/code-coverage',
-            array('Content-Type' => 'application/json'),
+            'repositories/'.$repositoryName.'/data/code-coverage{?access_token}',
+            null,
             json_encode(array(
                 'revision' => $revision,
                 'coverage' => array(
@@ -51,6 +56,7 @@ class UploadCommand extends Command
                 ),
             ))
         )->send();
+
         $output->writeln('Done');
     }
 

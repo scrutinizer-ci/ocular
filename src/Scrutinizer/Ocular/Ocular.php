@@ -23,7 +23,7 @@ class Ocular extends Application
     protected function getDefaultInputDefinition()
     {
         $definition = parent::getDefaultInputDefinition();
-        $definition->addOption(new InputOption('access-token', null, InputOption::VALUE_REQUIRED, 'The access token to use when communicating with scrutinizer-ci.com', $this->cfg->getAccessToken()));
+        $definition->addOption(new InputOption('access-token', null, InputOption::VALUE_REQUIRED, 'The access token to use when communicating with scrutinizer-ci.com', $this->cfg->getAccessToken()->getOrElse(null)));
 
         return $definition;
     }

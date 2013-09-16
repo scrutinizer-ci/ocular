@@ -37,8 +37,8 @@ class RepositoryIntrospector
         $output = $proc->getOutput();
 
         $patterns = array(
-            '#^origin\s+(?:git@|(?:git|https?)://)([^:/]+)(?:/|:)([^/]+)/([^/]+)\.git#',
-            '#^[^\s]+\s+(?:git@|(?:git|https?)://)([^:/]+)(?:/|:)([^/]+)/([^/]+)\.git#',
+            '#^origin\s+(?:git@|(?:git|https?)://)([^:/]+)(?:/|:)([^/]+)/([^/\s]+)(?:\.git)?#',
+            '#^[^\s]+\s+(?:git@|(?:git|https?)://)([^:/]+)(?:/|:)([^/]+)/([^/\s]+)(?:\.git)?#',
         );
 
         foreach ($patterns as $pattern) {
