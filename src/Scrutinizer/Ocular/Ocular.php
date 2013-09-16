@@ -8,7 +8,7 @@ use Symfony\Component\Console\Input\InputOption;
 
 class Ocular extends Application
 {
-    const VERSION = '@version@';
+    const VERSION = '@revision@';
 
     private $cfg;
 
