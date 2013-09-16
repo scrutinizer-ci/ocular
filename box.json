@@ -1,0 +1,20 @@
+{
+    "directories": [
+        "src/",
+        "vendor/"
+    ],
+    "directories-bin": [
+        "src/Scrutinizer/Ocular/Configuration",
+        "vendor/jms/serializer/src/JMS/Serializer/Annotation/",
+        "vendor/doctrine/annotations/lib/Doctrine/Common/Annotations/Annotation/"
+    ],
+    "files": [
+        "bin/ocular"
+    ],
+    "replacements": {
+        "revision": "HEAD"
+    },
+    "main": "bin/ocular",
+    "output": "ocular.phar",
+    "stub": true
+}
