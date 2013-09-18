@@ -14,5 +14,8 @@
         "phpoption/phpoption": "~1.0",
         "guzzle/guzzle": "~3.0",
         "jms/serializer": "~0.13"
+    },
+    "require-dev": {
+        "symfony/filesystem": "~2.0"
     }
 }

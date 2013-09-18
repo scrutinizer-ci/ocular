@@ -19,7 +19,7 @@ class RepositoryIntrospector
 
     public function getCurrentRevision()
     {
-        $proc = new Process('git rev-parse HEAD');
+        $proc = new Process('git rev-parse HEAD', $this->dir);
         if (0 !== $proc->run()) {
             throw new ProcessFailedException($proc);
         }
@@ -29,7 +29,7 @@ class RepositoryIntrospector
 
     public function getQualifiedName()
     {
-        $proc = new Process('git remote -v');
+        $proc = new Process('git remote -v', $this->dir);
         if (0 !== $proc->run()) {
             throw new ProcessFailedException($proc);
         }
@@ -37,8 +37,8 @@ class RepositoryIntrospector
         $output = $proc->getOutput();
 
         $patterns = array(
-            '#^origin\s+(?:git@|(?:git|https?)://)([^:/]+)(?:/|:)([^/]+)/([^/\s]+)(?:\.git)?#',
-            '#^[^\s]+\s+(?:git@|(?:git|https?)://)([^:/]+)(?:/|:)([^/]+)/([^/\s]+)(?:\.git)?#',
+            '#^origin\s+(?:git@|(?:git|https?)://)([^:/]+)(?:/|:)([^/]+)/([^/\s]+?)(?:\.git)?(?:\s|\n)#m',
+            '#^[^\s]+\s+(?:git@|(?:git|https?)://)([^:/]+)(?:/|:)([^/]+)/([^/\s]+?)(?:\.git)?(?:\s|\n)#m',
         );
 
         foreach ($patterns as $pattern) {
