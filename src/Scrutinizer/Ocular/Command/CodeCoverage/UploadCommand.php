@@ -20,6 +20,7 @@ class UploadCommand extends Command
             ->setName('code-coverage:upload')
             ->setDescription('Uploads code coverage information for an inspection to Scrutinizer.')
             ->addArgument('coverage-file', InputArgument::REQUIRED, 'The path to the code coverage file.')
+            ->addOption('api-url', null, InputOption::VALUE_REQUIRED, 'The base URL of the API.', 'https://scrutinizer-ci.com/api')
             ->addOption('repository', null, InputOption::VALUE_REQUIRED, 'The qualified repository name of your repository (GitHub: g/login/username; Bitbucket: b/login/username).')
             ->addOption('revision', null, InputOption::VALUE_REQUIRED, 'The revision that the code coverage information belongs to (defaults to git rev-parse HEAD).')
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'The format of the code coverage file. Currently supported: php-clover')
@@ -36,7 +37,7 @@ class UploadCommand extends Command
         $revision = $this->parseRevision($input->getOption('revision'));
         $repositoryName = $this->parseRepositoryName($input->getOption('repository'));
 
-        $client = new Client('https://scrutinizer-ci.com/api/{?access_token}', array(
+        $client = new Client($input->getOption('api-url').'{?access_token}', array(
             'access_token' => $input->getOption('access-token'),
             'request.options' => array(
                 'Content-Type' => 'application/json',
