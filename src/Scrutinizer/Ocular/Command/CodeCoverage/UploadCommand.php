@@ -2,6 +2,9 @@
 
 namespace Scrutinizer\Ocular\Command\CodeCoverage;
 
+use Guzzle\Http\Exception\BadResponseException;
+use Guzzle\Http\Exception\ClientErrorResponseException;
+use Guzzle\Http\Exception\ServerErrorResponseException;
 use Guzzle\Plugin\Backoff\BackoffPlugin;
 use Guzzle\Service\Client;
 use Scrutinizer\Ocular\Util\RepositoryIntrospector;
@@ -36,6 +39,7 @@ class UploadCommand extends Command
 
         $revision = $this->parseRevision($input->getOption('revision'));
         $repositoryName = $this->parseRepositoryName($input->getOption('repository'));
+        $format = $this->parseFormat($input->getOption('format'));
 
         $client = new Client($input->getOption('api-url').'{?access_token}', array(
             'access_token' => $input->getOption('access-token'),
@@ -46,19 +50,63 @@ class UploadCommand extends Command
         $client->addSubscriber(BackoffPlugin::getExponentialBackoff());
 
         $output->write(sprintf('Uploading code coverage for repository "%s" and revision "%s"... ', $repositoryName, $revision));
-        $client->post(
-            'repositories/'.$repositoryName.'/data/code-coverage{?access_token}',
-            null,
-            json_encode(array(
-                'revision' => $revision,
-                'coverage' => array(
-                    'format' => $input->getOption('format'),
-                    'data' => base64_encode(file_get_contents($coverageFile)),
-                ),
-            ))
-        )->send();
+        try {
+            $client->post(
+                'repositories/'.$repositoryName.'/data/code-coverage{?access_token}',
+                null,
+                json_encode(array(
+                    'revision' => $revision,
+                    'coverage' => array(
+                        'format' => $format,
+                        'data' => base64_encode($this->getCoverageData($coverageFile)),
+                    ),
+                ))
+            )->send();
+            $output->writeln('Done');
 
-        $output->writeln('Done');
+            return 0;
+        } catch (BadResponseException $ex) {
+            $output->writeln("<error>Failed</error>");
+
+            if ($ex instanceof ClientErrorResponseException) {
+                $output->writeln('<error>'.$ex->getResponse()->getBody(true).'</error>');
+
+                return 1;
+            }
+
+            throw $ex;
+        }
+    }
+
+    private function getCoverageData($file)
+    {
+        $content = file_get_contents($file);
+        $content = str_replace($this->getBasePath(), '{scrutinizer_project_base_path}', $content);
+
+        return $content;
+    }
+
+    private function getBasePath()
+    {
+        $dir = getcwd();
+        while ( ! empty($dir)) {
+            if (is_dir($dir.'/.git')) {
+                return $dir;
+            }
+
+            $dir = dirname($dir);
+        }
+
+        throw new \LogicException('Could not determine base path for project.');
+    }
+
+    private function parseFormat($format)
+    {
+        if (empty($format)) {
+            throw new \RuntimeException('Please pass the format of the code coverage via the "--format" option, i.e. "--format=php-clover".');
+        }
+
+        return $format;
     }
 
     private function parseRepositoryName($name)
