@@ -114,8 +114,10 @@ class UploadCommand extends Command
         if ( ! empty($name)) {
             return $name;
         }
+        
+        $repoInspector = new RepositoryIntrospector(getcwd());
 
-        return (new RepositoryIntrospector(getcwd()))->getQualifiedName();
+        return $repoInspector->getQualifiedName();
     }
 
     private function parseRevision($inputRevision)
@@ -124,6 +126,8 @@ class UploadCommand extends Command
             return $inputRevision;
         }
 
-        return (new RepositoryIntrospector(getcwd()))->getCurrentRevision();
+        $repoInspector = new RepositoryIntrospector(getcwd());
+
+        return $repoInspector->getCurrentRevision();
     }
 }
