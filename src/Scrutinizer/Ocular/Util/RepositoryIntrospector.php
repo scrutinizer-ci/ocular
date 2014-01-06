@@ -27,6 +27,16 @@ class RepositoryIntrospector
         return trim($proc->getOutput());
     }
 
+    public function getCurrentParents()
+    {
+        $proc = new Process('git log --pretty="%P" -n1 HEAD', $this->dir);
+        if (0 !== $proc->run()) {
+            throw new ProcessFailedException($proc);
+        }
+
+        return explode(' ', trim($proc->getOutput()));
+    }
+
     public function getQualifiedName()
     {
         $proc = new Process('git remote -v', $this->dir);

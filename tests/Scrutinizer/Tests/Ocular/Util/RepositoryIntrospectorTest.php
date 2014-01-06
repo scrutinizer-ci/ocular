@@ -20,6 +20,23 @@ class RepositoryInspectorTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('g/schmittjoh/metadata', $introspector->getQualifiedName());
     }
 
+    public function testGetCurrentParents()
+    {
+        $tmpDir = $this->getTempDir();
+        mkdir($tmpDir, 0777, true);
+
+        $this->exec('git init', $tmpDir);
+        file_put_contents($tmpDir.'/foo', 'foo');
+        $this->exec('git add . && git commit -m "adds foo"', $tmpDir);
+
+        $introspector = new RepositoryIntrospector($tmpDir);
+        $headRev = $introspector->getCurrentRevision();
+
+        file_put_contents($tmpDir.'/bar', 'bar');
+        $this->exec('git add . && git commit -m "adds bar"', $tmpDir);
+        $this->assertEquals(array($headRev), $introspector->getCurrentParents());
+    }
+
     protected function tearDown()
     {
         parent::tearDown();
@@ -27,6 +44,14 @@ class RepositoryInspectorTest extends \PHPUnit_Framework_TestCase
         $fs = new Filesystem();
         foreach ($this->tmpDirs as $dir) {
             $fs->remove($dir);
+        }
+    }
+
+    private function exec($cmd, $dir)
+    {
+        $proc = new Process($cmd, $dir);
+        if ($proc->run() !== 0) {
+            throw new ProcessFailedException($proc);
         }
     }
 

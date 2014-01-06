@@ -27,6 +27,7 @@ class UploadCommand extends Command
             ->addOption('repository', null, InputOption::VALUE_REQUIRED, 'The qualified repository name of your repository (GitHub: g/login/username; Bitbucket: b/login/username).')
             ->addOption('revision', null, InputOption::VALUE_REQUIRED, 'The revision that the code coverage information belongs to (defaults to git rev-parse HEAD).')
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'The format of the code coverage file. Currently supported: php-clover')
+            ->addOption('parent', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'The parent revision of the current revision.')
         ;
     }
 
@@ -38,6 +39,7 @@ class UploadCommand extends Command
         }
 
         $revision = $this->parseRevision($input->getOption('revision'));
+        $parents = $this->parseParents($input->getOption('parent'));
         $repositoryName = $this->parseRepositoryName($input->getOption('repository'));
         $format = $this->parseFormat($input->getOption('format'));
 
@@ -56,6 +58,7 @@ class UploadCommand extends Command
                 null,
                 json_encode(array(
                     'revision' => $revision,
+                    'parents' => $parents,
                     'coverage' => array(
                         'format' => $format,
                         'data' => base64_encode($this->getCoverageData($coverageFile)),
@@ -129,5 +132,16 @@ class UploadCommand extends Command
         $repoInspector = new RepositoryIntrospector(getcwd());
 
         return $repoInspector->getCurrentRevision();
+    }
+
+    private function parseParents(array $parents)
+    {
+        if ( ! empty($parents)) {
+            return $parents;
+        }
+
+        $repoInspector = new RepositoryIntrospector(getcwd());
+
+        return $repoInspector->getCurrentParents();
     }
 }
