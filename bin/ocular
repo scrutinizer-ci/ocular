@@ -5,6 +5,8 @@ call_user_func(function() {
     require_once call_user_func(function() {
         if (is_file($file = __DIR__.'/../vendor/autoload.php')) {
             return $file;
+        } elseif (is_file($file = getcwd().'/vendor/autoload.php')) {
+        	return $file;
         }
 
         throw new \LogicException('Could not locate autoload.php. Did you forget to install vendors using "composer install"?');
