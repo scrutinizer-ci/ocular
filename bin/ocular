@@ -5,7 +5,9 @@ call_user_func(function() {
     require_once call_user_func(function() {
         if (is_file($file = __DIR__.'/../vendor/autoload.php')) {
             return $file;
-        } elseif (is_file($file = getcwd().'/vendor/autoload.php')) {
+        }
+        
+        if (is_file($file = __DIR__.'/../../../autoload.php')) {
         	return $file;
         }
 
