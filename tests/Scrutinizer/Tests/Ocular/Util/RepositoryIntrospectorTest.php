@@ -81,6 +81,21 @@ class RepositoryInspectorTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(array($headRev), $introspector->getCurrentParents());
     }
 
+    /**
+     * @expectedException Symfony\Component\Process\Exception\ProcessFailedException;
+     */
+    public function testGetCurrentParentsFail()
+    {
+        $tmpDir = $this->getTempDir();
+        mkdir($tmpDir, 0777, true);
+
+        $this->exec('git init', $tmpDir);
+
+        $introspector = new RepositoryIntrospector($tmpDir);
+
+        $introspector->getCurrentParents();
+    }
+
     protected function tearDown()
     {
         parent::tearDown();
