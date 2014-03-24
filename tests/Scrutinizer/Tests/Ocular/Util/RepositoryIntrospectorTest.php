@@ -11,6 +11,13 @@ class RepositoryInspectorTest extends \PHPUnit_Framework_TestCase
 {
     private $tmpDirs = array();
 
+    public function setUp()
+    {
+        $tmpDir = $this->getTempDir();
+        $this->exec('git config --global user.email "scrutinizer-ci@github.com"', $tmpDir);
+        $this->exec('git config --global user.name "Scrutinizer-CI"', $tmpDir);
+    }
+
     public function testGetQualifiedName()
     {
         $tmpDir = $this->getTempDir();
