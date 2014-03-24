@@ -33,15 +33,7 @@ class UploadCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $coverageFile = $input->getArgument('coverage-file');
-        if ( ! is_file($coverageFile)) {
-            throw new \InvalidArgumentException(sprintf('The coverage file "%s" does not exist.', $coverageFile));
-        }
-
-        $revision = $this->parseRevision($input->getOption('revision'));
-        $parents = $this->parseParents($input->getOption('parent'));
         $repositoryName = $this->parseRepositoryName($input->getOption('repository'));
-        $format = $this->parseFormat($input->getOption('format'));
 
         $client = new Client($input->getOption('api-url').'{?access_token}', array(
             'access_token' => $input->getOption('access-token'),
@@ -51,19 +43,18 @@ class UploadCommand extends Command
         ));
         $client->addSubscriber(BackoffPlugin::getExponentialBackoff());
 
-        $output->write(sprintf('Uploading code coverage for repository "%s" and revision "%s"... ', $repositoryName, $revision));
+        $postData = $this->generatePostData($input);
+        if ( ! isset($postData['coverage'])) {
+            $output->write(sprintf('Notifying that no code coverage data is available for repository "%s" and revision "%s"... ', $repositoryName, $postData['revision']));
+        } else {
+            $output->write(sprintf('Uploading code coverage for repository "%s" and revision "%s"... ', $repositoryName, $postData['revision']));
+        }
+
         try {
             $client->post(
                 'repositories/'.$repositoryName.'/data/code-coverage{?access_token}',
                 null,
-                json_encode(array(
-                    'revision' => $revision,
-                    'parents' => $parents,
-                    'coverage' => array(
-                        'format' => $format,
-                        'data' => base64_encode($this->getCoverageData($coverageFile)),
-                    ),
-                ))
+                json_encode($postData)
             )->send();
             $output->writeln('Done');
 
@@ -79,6 +70,24 @@ class UploadCommand extends Command
 
             throw $ex;
         }
+    }
+
+    private function generatePostData(InputInterface $input)
+    {
+        $data = array(
+            'revision' => $this->parseRevision($input->getOption('revision')),
+            'parents' => $this->parseParents($input->getOption('parent')),
+        );
+
+        $coverageFile = $input->getArgument('coverage-file');
+        if (is_file($coverageFile)) {
+            $data['coverage'] = array(
+                'format' => $this->parseFormat($input->getOption('format')),
+                'data' => base64_encode($this->getCoverageData($coverageFile))
+            );
+        }
+
+        return $data;
     }
 
     private function getCoverageData($file)
