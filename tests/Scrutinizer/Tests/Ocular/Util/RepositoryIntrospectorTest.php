@@ -55,8 +55,6 @@ class RepositoryInspectorTest extends \PHPUnit_Framework_TestCase
 
         $this->exec('git init', $tmpDir);
 
-        $expectedRev = $this->exec('git rev-parse HEAD', $tmpDir);
-
         $introspector = new RepositoryIntrospector($tmpDir);
         $headRev = $introspector->getCurrentRevision();
     }
