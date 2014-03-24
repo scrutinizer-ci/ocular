@@ -46,6 +46,22 @@ class RepositoryInspectorTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @expectedException Symfony\Component\Process\Exception\ProcessFailedException;
+     */
+    public function testGetCurrentRevisionFail()
+    {
+        $tmpDir = $this->getTempDir();
+        mkdir($tmpDir, 0777, true);
+
+        $this->exec('git init', $tmpDir);
+
+        $expectedRev = $this->exec('git rev-parse HEAD', $tmpDir);
+
+        $introspector = new RepositoryIntrospector($tmpDir);
+        $headRev = $introspector->getCurrentRevision();
+    }
+
+    /**
      * @depends testGetCurrentRevision
      */
     public function testGetCurrentParents()
