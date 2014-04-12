@@ -9,5 +9,8 @@ php:
 before_script:
   - composer self-update
   - composer install
+  - git config --global user.email "scrutinizer-ci@github.com"
+  - git config --global user.name "Scrutinizer-CI"
+
 
 script: phpunit
