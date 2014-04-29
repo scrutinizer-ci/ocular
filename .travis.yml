@@ -10,6 +10,7 @@ php:
 before_script:
   - composer self-update
   - composer install
+  - wget https://scrutinizer-ci.com/ocular.phar
 
 script:
   - phpunit
