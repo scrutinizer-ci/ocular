@@ -1,0 +1,20 @@
+imports:
+    - php
+
+tools:
+    # PHP Similarity Analyzer and Copy/paste Detector cannot be used at
+    # the same time right now. Make sure to either remove, or disable one.
+    php_sim: true
+    php_cpd: false
+    
+    php_changetracking: true
+    
+    php_cs_fixer:
+        config: { level: psr2 }
+    
+    php_pdepend: true
+    
+    php_mess_detector: true
+    
+    external_code_coverage:
+        timeout: 1800
