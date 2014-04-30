@@ -16,6 +16,7 @@
         "jms/serializer": "~0.13"
     },
     "require-dev": {
+        "squizlabs/php_codesniffer": "~1",
         "symfony/filesystem": "~2.0"
     }
 }

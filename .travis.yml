@@ -4,13 +4,26 @@ php:
   - 5.3
   - 5.4
   - 5.5
+  - 5.6
   - hhvm
 
 before_script:
   - composer self-update
-  - composer install
-  - git config --global user.email "scrutinizer-ci@github.com"
-  - git config --global user.name "Scrutinizer-CI"
+  - composer install --dev --prefer-source;
+  - wget https://scrutinizer-ci.com/ocular.phar
 
+script:
+  - phpunit
+  - ./vendor/bin/phpcs -n --standard=PSR2 ./src/ ./tests/
 
-script: phpunit
+after_script:
+  - php ocular.phar code-coverage:upload --format=php-clover build/logs/clover.xml
+
+notifications:
+  email: false
+  
+matrix:
+  fast_finish: true
+  allow_failures:
+    - php: 5.6
+    - php: hhvm
