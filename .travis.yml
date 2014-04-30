@@ -13,7 +13,7 @@ before_script:
   - wget https://scrutinizer-ci.com/ocular.phar
 
 script:
-  - phpunit
+  - phpunit --configuration ./tests/phpunit.xml
   - ./vendor/bin/phpcs -n --standard=PSR2 ./src/ ./tests/
 
 after_script:
