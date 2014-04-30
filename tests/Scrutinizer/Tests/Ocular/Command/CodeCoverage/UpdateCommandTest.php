@@ -63,10 +63,14 @@ class UpdateCommandTest extends \PHPUnit_Framework_TestCase
         mkdir($buildDir, 0777, true);
 
         $coverageFile = $buildDir . DIRECTORY_SEPARATOR . 'coverage.xml';
-        file_put_contents($coverageFile,
-                          sprintf('<xml><file name="%1$s/test1"></file><file name="%1$s/test2"></file>' .
-                                  '<file name="%1$s/test3"></file><file name="%1$s/test4"></file></xml>',
-                                  $this->currentTmpDir));
+        file_put_contents(
+            $coverageFile,
+            sprintf(
+                '<xml><file name="%1$s/test1"></file><file name="%1$s/test2"></file>' .
+                '<file name="%1$s/test3"></file><file name="%1$s/test4"></file></xml>',
+                $this->currentTmpDir
+            )
+        );
 
         $reflection = $this->helperReflectionMethode($this->SUT, 'getCoverageData');
         $result = $reflection->invoke($this->SUT, $coverageFile);
@@ -132,12 +136,11 @@ class UpdateCommandTest extends \PHPUnit_Framework_TestCase
     {
         if ($expectedValue instanceof \Exception) {
             $this->setExpectedException(get_class($expectedValue), $expectedValue->getMessage());
-        } elseif(empty($input)) {
+        } elseif (empty($input)) {
             $expectedValue = $this->helperMockRepositoryIntrospector($method);
         } else {
             $expectedValue = $input;
         }
-
 
         $reflection = $this->helperReflectionMethode($this->SUT, $method);
         $result = $reflection->invoke($this->SUT, $input);
