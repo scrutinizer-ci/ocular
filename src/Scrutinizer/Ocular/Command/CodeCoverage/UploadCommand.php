@@ -101,11 +101,14 @@ class UploadCommand extends Command
     private function getBasePath()
     {
         $dir = getcwd();
-        while (!empty($dir)) {
+        $lastestDir = null;
+
+        while (!empty($dir) && $dir !== $lastestDir) {
             if (is_dir($dir.'/.git')) {
                 return $dir;
             }
 
+            $lastestDir = $dir;
             $dir = dirname($dir);
         }
 

@@ -3,6 +3,9 @@
 namespace Scrutinizer\Tests\Ocular\Command\CodeCoverage;
 
 use Scrutinizer\Ocular\Command\CodeCoverage\UploadCommand;
+use Symfony\Component\Process\Process;
+use Symfony\Component\Process\Exception\ProcessFailedException;
+use Scrutinizer\Ocular\Util\RepositoryIntrospector;
 
 class UpdateCommandTest extends \PHPUnit_Framework_TestCase
 {
@@ -46,53 +49,100 @@ class UpdateCommandTest extends \PHPUnit_Framework_TestCase
 
     public function testGetCoverageData()
     {
-        $this->markTestIncomplete();
+        $this->getTempDir(true, 0777);
+        $this->installRepository();
+        $subdir[] = md5(rand(0, 1000));
+        $subdir[] = md5(rand(0, 1000));
+
+        $subdir =  $this->currentTmpDir . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $subdir);
+        mkdir($subdir, 0777, true);
+        chdir($subdir);
+
+
+        $buildDir =  $this->currentTmpDir . DIRECTORY_SEPARATOR . 'build';
+        mkdir($buildDir, 0777, true);
+
+        $coverageFile = $buildDir . DIRECTORY_SEPARATOR . 'coverage.xml';
+        file_put_contents($coverageFile,
+                          sprintf('<xml><file name="%1$s/test1"></file><file name="%1$s/test2"></file>' .
+                                  '<file name="%1$s/test3"></file><file name="%1$s/test4"></file></xml>',
+                                  $this->currentTmpDir));
+
+        $reflection = $this->helperReflectionMethode($this->SUT, 'getCoverageData');
+        $result = $reflection->invoke($this->SUT, $coverageFile);
+
+        $this->assertInternalType('string', $result);
+        $this->assertGreaterThan(2, strlen($result));
+
+
+        $this->assertRegExp('#{scrutinizer_project_base_path}/test1#', $result);
+        $this->assertRegExp('#{scrutinizer_project_base_path}/test2#', $result);
+        $this->assertRegExp('#{scrutinizer_project_base_path}/test3#', $result);
+        $this->assertRegExp('#{scrutinizer_project_base_path}/test4#', $result);
     }
 
     public function testGetBasePath()
     {
-        $this->getTempDir();
-        chdir($this->currentTmpDir);
+        $this->getTempDir(true, 0777);
+        $this->installRepository();
+        $subdir[] = md5(rand(0, 1000));
+        $subdir[] = md5(rand(0, 1000));
+
+        $subdir =  $this->currentTmpDir . DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $subdir);
+
+        mkdir($subdir, 0777, true);
+        chdir($subdir);
 
         $reflection = $this->helperReflectionMethode($this->SUT, 'getBasePath');
 
         $result = $reflection->invoke($this->SUT);
+
+        $this->assertInternalType('string', $result);
+        $this->assertGreaterThan(2, strlen($result));
+        $this->assertTrue(is_dir($subdir));
     }
 
     /**
-     * @expectedException RuntimeException
-     * @expectedExceptionMessage Please pass the format of the code coverage via the "--format" option, i.e. "--format=php-clover".
+     * @expectedException \LogicException
      */
-    public function testParseFormatFail()
+    public function testGetBasePathFail()
     {
-        $reflection = $this->helperReflectionMethode($this->SUT, 'parseFormat');
-        $reflection->invoke($this->SUT, null);
+        $this->getTempDir(true, 0777);
+        chdir($this->currentTmpDir);
+
+        $reflection = $this->helperReflectionMethode($this->SUT, 'getBasePath');
+        $result = $reflection->invoke($this->SUT);
     }
 
-    public function testParseRepositoryName()
-    {
-        $this->markTestIncomplete();
-    }
-    public function testParseParents()
-    {
-        $this->markTestIncomplete();
-    }
-
-    public function testParseRevision()
-    {
-        $this->markTestIncomplete();
-    }
+//     /**
+//      * @expectedException \RuntimeException
+//      * @expectedExceptionMessage Please pass the format of the code coverage via the "--format" option, i.e. "--format=php-clover".
+//      */
+//     public function testParseFormatFail()
+//     {
+//         $reflection = $this->helperReflectionMethode($this->SUT, 'parseFormat');
+//         $reflection->invoke($this->SUT, null);
+//     }
 
     /**
      *
      * @dataProvider providerTestParseMethodWithNotEmpty
      */
-    public function testParseMethodWithNotEmpty($method, $input)
+    public function testParseMethodWithNotEmpty($method, $input, $expectedValue = null)
     {
+        if ($expectedValue instanceof \Exception) {
+            $this->setExpectedException(get_class($expectedValue), $expectedValue->getMessage());
+        } elseif(empty($input)) {
+            $expectedValue = $this->helperMockRepositoryIntrospector($method);
+        } else {
+            $expectedValue = $input;
+        }
+
+
         $reflection = $this->helperReflectionMethode($this->SUT, $method);
         $result = $reflection->invoke($this->SUT, $input);
 
-        $this->assertEquals($input, $result);
+        $this->assertEquals($expectedValue, $result);
     }
 
     public function testConfigure()
@@ -141,10 +191,42 @@ class UpdateCommandTest extends \PHPUnit_Framework_TestCase
     {
         return array(
             array('parseParents', array('test')),
+            array('parseParents', array()),
+
             array('parseRevision', 'test'),
+            array('parseRevision', null),
+
             array('parseRepositoryName', 'test'),
+            array('parseRepositoryName', null),
+
             array('parseFormat', 'test'),
+            array('parseFormat', null, new \RuntimeException('Please pass the format of the code coverage via the "--format" option, i.e. "--format=php-clover"')),
         );
+    }
+
+    private function exec($cmd, $dir = null)
+    {
+        $dir = $dir ?: $this->currentTmpDir;
+
+        $proc = new Process($cmd, $dir ?: $this->currentTmpDir);
+        if ($proc->run() !== 0) {
+            throw new ProcessFailedException($proc);
+        }
+
+        return trim($proc->getOutput());
+    }
+
+    private function cloneRepository($url, $dir = null)
+    {
+        $this->installRepository($dir);
+        $this->exec('git remote add origin ' . $url);
+    }
+
+    private function installRepository($dir = null)
+    {
+        $this->exec('git init', $dir);
+        $this->exec('git config user.email "scrutinizer-ci@github.com"', $dir);
+        $this->exec('git config user.name "Scrutinizer-CI"', $dir);
     }
 
     private function getTempDir($setDefault = true, $mkdir = false)
@@ -160,5 +242,38 @@ class UpdateCommandTest extends \PHPUnit_Framework_TestCase
         }
 
         return $this->tmpDirs[] = $tmpDir;
+    }
+
+    /**
+     *
+     * @param string $methode
+     * @return mixed expectedValue
+     */
+    protected function helperMockRepositoryIntrospector($methode)
+    {
+        $this->getTempDir(true, 0777);
+        if ($methode === 'parseRepositoryName') {
+            $this->cloneRepository('https://github.com/schmittjoh/metadata.git');
+        } else {
+            $this->installRepository();
+        }
+        chdir($this->currentTmpDir);
+
+        $repositoryIntrospector = new RepositoryIntrospector($this->currentTmpDir);
+
+        file_put_contents($this->currentTmpDir.'/foo', 'foo');
+        $this->exec('git add . && git commit -m "adds foo"', $this->currentTmpDir);
+
+        switch ($methode) {
+            case "parseParents":
+                return $repositoryIntrospector->getCurrentParents();
+                break;
+            case "parseRevision":
+                return $repositoryIntrospector->getCurrentRevision();
+                break;
+            case "parseRepositoryName":
+                return $repositoryIntrospector->getQualifiedName();
+                break;
+        }
     }
 }

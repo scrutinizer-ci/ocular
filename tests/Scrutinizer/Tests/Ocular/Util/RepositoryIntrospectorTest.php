@@ -145,16 +145,15 @@ class RepositoryInspectorTest extends \PHPUnit_Framework_TestCase
 
     private function cloneRepository($url, $dir = null)
     {
-        $dir = $dir ?: $this->currentTmpDir;
-
-        $this->exec('git clone '.$url.' '.$dir);
+        $this->installRepository($dir);
+        $this->exec('git remote add origin ' . $url);
     }
 
-    private function installRepository()
+    private function installRepository($dir = null)
     {
-        $this->exec('git init');
-        $this->exec('git config user.email "scrutinizer-ci@github.com"');
-        $this->exec('git config user.name "Scrutinizer-CI"');
+        $this->exec('git init', $dir);
+        $this->exec('git config user.email "scrutinizer-ci@github.com"', $dir);
+        $this->exec('git config user.name "Scrutinizer-CI"', $dir);
     }
 
     public function providerTestGetRepositoryType()
