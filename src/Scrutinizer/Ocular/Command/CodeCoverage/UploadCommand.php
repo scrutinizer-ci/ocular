@@ -44,7 +44,7 @@ class UploadCommand extends Command
         $client->addSubscriber(BackoffPlugin::getExponentialBackoff());
 
         $postData = $this->generatePostData($input);
-        if ( ! isset($postData['coverage'])) {
+        if (!isset($postData['coverage'])) {
             $output->write(sprintf('Notifying that no code coverage data is available for repository "%s" and revision "%s"... ', $repositoryName, $postData['revision']));
         } else {
             $output->write(sprintf('Uploading code coverage for repository "%s" and revision "%s"... ', $repositoryName, $postData['revision']));
@@ -101,7 +101,7 @@ class UploadCommand extends Command
     private function getBasePath()
     {
         $dir = getcwd();
-        while ( ! empty($dir)) {
+        while (!empty($dir)) {
             if (is_dir($dir.'/.git')) {
                 return $dir;
             }
@@ -123,10 +123,10 @@ class UploadCommand extends Command
 
     private function parseRepositoryName($name)
     {
-        if ( ! empty($name)) {
+        if (!empty($name)) {
             return $name;
         }
-        
+
         $repoInspector = new RepositoryIntrospector(getcwd());
 
         return $repoInspector->getQualifiedName();
@@ -134,7 +134,7 @@ class UploadCommand extends Command
 
     private function parseRevision($inputRevision)
     {
-        if ( ! empty($inputRevision)) {
+        if (!empty($inputRevision)) {
             return $inputRevision;
         }
 
@@ -145,7 +145,7 @@ class UploadCommand extends Command
 
     private function parseParents(array $parents)
     {
-        if ( ! empty($parents)) {
+        if (!empty($parents)) {
             return $parents;
         }
 
