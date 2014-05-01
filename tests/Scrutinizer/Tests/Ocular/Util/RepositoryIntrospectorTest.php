@@ -17,9 +17,28 @@ class RepositoryInspectorTest extends \PHPUnit_Framework_TestCase
         $this->getTempDir(true, 0777);
     }
 
+
     /**
-     * @todo add dataprovider ( bitpunker and more branches )
+     * @expectedException \Symfony\Component\Process\Exception\ProcessFailedException
      */
+    public function testGetQualifiedNameNonGitRepo()
+    {
+        $introspector = new RepositoryIntrospector($this->currentTmpDir);
+        $introspector->getQualifiedName();
+    }
+
+
+    /**
+     * @expectedException \RuntimeException
+     */
+    public function testGetQualifiedNameWithNoRemote()
+    {
+        $this->installRepository();
+
+        $introspector = new RepositoryIntrospector($this->currentTmpDir);
+        $introspector->getQualifiedName();
+    }
+
     public function testGetQualifiedName()
     {
         $this->cloneRepository('https://github.com/schmittjoh/metadata.git');
