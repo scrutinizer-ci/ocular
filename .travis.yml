@@ -11,6 +11,7 @@ before_script:
   - composer self-update
   - composer install --dev --prefer-source;
   - wget https://scrutinizer-ci.com/ocular.phar
+  - sh -c "if [ '$TRAVIS_PHP_VERSION' != '5.3' ]; then echo 'starting PHP server on port 8080'; php -S localhost:8080 -d max_execution_time=10 -t tests/ tests/_files/_route-script.php & fi"
 
 script:
   - phpunit --configuration ./tests/phpunit.xml

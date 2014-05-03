@@ -3,9 +3,11 @@
 namespace Scrutinizer\Tests\Ocular\Command\CodeCoverage;
 
 use Scrutinizer\Ocular\Command\CodeCoverage\UploadCommand;
+use Scrutinizer\Ocular\Util\RepositoryIntrospector;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
-use Scrutinizer\Ocular\Util\RepositoryIntrospector;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class UpdateCommandTest extends \PHPUnit_Framework_TestCase
 {
@@ -20,14 +22,16 @@ class UpdateCommandTest extends \PHPUnit_Framework_TestCase
 
     /**
      *
-     * @var OutputInterface
+     * @var OutputInterface|\PHPUnit_Framework_MockObject_MockObject
      */
     protected $output;
     /**
      *
-     * @var InputInterface
+     * @var InputInterface|\PHPUnit_Framework_MockObject_MockObject
      */
     protected $input;
+
+    protected $inputGetOptionMap = array();
 
     public function setUp()
     {
@@ -37,14 +41,93 @@ class UpdateCommandTest extends \PHPUnit_Framework_TestCase
         $this->output = $this->getMock('\Symfony\Component\Console\Output\OutputInterface');
     }
 
-    public function testExecute()
+    /**
+     * @dataProvider providerTestExecute
+     */
+    public function testExecute($withCoverageFile, $statusCode = '200')
     {
-        $this->markTestIncomplete();
+        $repositoryName = "scrutinizer-ocular";
+        $accessToken = md5("success");
+        $revision = md5('rev1');
+
+        $this->inputGetOptionMap[] = array('repository', &$repositoryName);
+        $this->inputGetOptionMap[] = array('api-url', "http://localhost:8080/");
+        $this->inputGetOptionMap[] = array('access-token', &$accessToken);
+
+        $this->helperMockGeneratePostData($withCoverageFile, $revision);
+
+        $this->input->expects($this->any())
+                    ->method('getOption')
+                    ->will($this->returnValueMap($this->inputGetOptionMap));
+
+        if ($statusCode === '200') {
+            $this->output->expects($this->once())
+            ->method('writeln')
+            ->with('Done');
+        } else {
+            $this->output->expects($this->at(1))
+                         ->method('writeln')
+                         ->with('<error>Failed</error>');
+
+            if ($statusCode === '403') {
+                $accessToken = md5('no access');
+                $this->output->expects($this->at(2))
+                             ->method('writeln')
+                             ->with('<error>no access with the token "' . var_export(array($accessToken, $accessToken), true) .'"</error>');
+            } else {
+                $repositoryName = 'with-internal-server-error';
+            }
+        }
+
+        if (!$withCoverageFile) {
+            $message = sprintf(
+                'Notifying that no code coverage data is available for repository "%s" and revision "%s"... ',
+                $repositoryName,
+                $revision
+            );
+        } else {
+            $message = sprintf(
+                'Uploading code coverage for repository "%s" and revision "%s"... ',
+                $repositoryName,
+                $revision
+            );
+        }
+
+        $this->output->expects($this->once())
+                     ->method('write')
+                     ->with($message);
+
+        $reflection = $this->helperReflectionMethode($this->SUT, 'execute');
+
+        if ($statusCode === '500') {
+            $this->setExpectedException('\Guzzle\Http\Exception\BadResponseException');
+        }
+
+        $result = $reflection->invoke($this->SUT, $this->input, $this->output);
+
+        if ($statusCode === '200') {
+            $this->assertEquals(0, $result);
+        } elseif (substr($statusCode,0,1) === '4') {
+            $this->assertEquals(1, $result);
+        }
     }
 
     public function testGeneratePostData()
     {
-        $this->markTestIncomplete();
+        $this->helperMockGeneratePostData(true);
+
+        $this->input->expects($this->any())
+                    ->method('getOption')
+                    ->will($this->returnValueMap($this->inputGetOptionMap));
+
+
+        $reflection = $this->helperReflectionMethode($this->SUT, 'generatePostData');
+        $result = $reflection->invoke($this->SUT, $this->input);
+
+        $this->assertInternalType('array', $result);
+        $this->assertArrayHasKey('revision', $result);
+        $this->assertArrayHasKey('parents', $result);
+        $this->assertArrayHasKey('coverage', $result);
     }
 
     public function testGetCoverageData()
@@ -207,6 +290,20 @@ class UpdateCommandTest extends \PHPUnit_Framework_TestCase
         );
     }
 
+    public function providerTestExecute()
+    {
+        return array(
+            array(true, '200'),
+            array(false, '200'),
+
+            array(true, '403'),
+            array(false, '403'),
+
+            array(true, '500'),
+            array(false, '500'),
+        );
+    }
+
     private function exec($cmd, $dir = null)
     {
         $dir = $dir ?: $this->currentTmpDir;
@@ -277,6 +374,44 @@ class UpdateCommandTest extends \PHPUnit_Framework_TestCase
             case "parseRepositoryName":
                 return $repositoryIntrospector->getQualifiedName();
                 break;
+        }
+    }
+    protected function helperMockGeneratePostData($withCoverage, $revision = null)
+    {
+        $this->getTempDir(true, 0777);
+        $this->installRepository();
+        chdir($this->currentTmpDir);
+
+
+        $buildDir =  $this->currentTmpDir . DIRECTORY_SEPARATOR . 'build';
+        mkdir($buildDir, 0777, true);
+
+
+        $coverageFile = $buildDir . DIRECTORY_SEPARATOR . 'coverage.xml';
+
+        $this->inputGetOptionMap[] = array('revision', $revision);
+        $this->inputGetOptionMap[] = array('parent', array());
+        $this->inputGetOptionMap[] = array('format', "--format=php-clover");
+
+        $this->input->expects($this->any())
+                    ->method('getArgument')
+                    ->with('coverage-file')
+                    ->will($this->returnValue($coverageFile));
+
+
+        file_put_contents($this->currentTmpDir.'/foo', 'foo');
+        $this->exec('git add . && git commit -m "adds foo"', $this->currentTmpDir);
+
+
+        if ($withCoverage) {
+            file_put_contents(
+                $coverageFile,
+                sprintf(
+                    '<xml><file name="%1$s/test1"></file><file name="%1$s/test2"></file>' .
+                    '<file name="%1$s/test3"></file><file name="%1$s/test4"></file></xml>',
+                    $this->currentTmpDir
+                )
+            );
         }
     }
 }
