@@ -3,38 +3,123 @@
 namespace Scrutinizer\Tests\Ocular\Util;
 
 use Scrutinizer\Ocular\Util\RepositoryIntrospector;
-use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\Process\Exception\ProcessFailedException;
-use Symfony\Component\Process\Process;
+use Scrutinizer\Tests\Ocular\AbstractTestCaseClass;
 
-class RepositoryInspectorTest extends \PHPUnit_Framework_TestCase
+use Symfony\Component\Filesystem\Filesystem;
+
+class RepositoryInspectorTest extends AbstractTestCaseClass
 {
-    private $tmpDirs = array();
+
+    public function setUp()
+    {
+        $this->getTempDir(true, 0777);
+    }
+
+    /**
+     * @expectedException \Symfony\Component\Process\Exception\ProcessFailedException
+     */
+    public function testGetQualifiedNameNonGitRepo()
+    {
+        $introspector = new RepositoryIntrospector($this->currentTmpDir);
+        $introspector->getQualifiedName();
+    }
+
+
+    /**
+     * @expectedException \RuntimeException
+     */
+    public function testGetQualifiedNameWithNoRemote()
+    {
+        $this->installRepository();
+
+        $introspector = new RepositoryIntrospector($this->currentTmpDir);
+        $introspector->getQualifiedName();
+    }
 
     public function testGetQualifiedName()
     {
-        $tmpDir = $this->getTempDir();
-        $this->installRepository('https://github.com/schmittjoh/metadata.git', $tmpDir);
+        $this->cloneRepository('https://github.com/schmittjoh/metadata.git');
 
-        $introspector = new RepositoryIntrospector($tmpDir);
+        $introspector = new RepositoryIntrospector($this->currentTmpDir);
         $this->assertEquals('g/schmittjoh/metadata', $introspector->getQualifiedName());
     }
 
-    public function testGetCurrentParents()
+    public function testGetCurrentRevision()
     {
-        $tmpDir = $this->getTempDir();
-        mkdir($tmpDir, 0777, true);
+        $this->installRepository();
 
-        $this->exec('git init', $tmpDir);
-        file_put_contents($tmpDir.'/foo', 'foo');
-        $this->exec('git add . && git commit -m "adds foo"', $tmpDir);
+        file_put_contents($this->currentTmpDir.'/foo', 'foo');
+        $this->exec('git add . && git commit -m "adds foo"', $this->currentTmpDir);
 
-        $introspector = new RepositoryIntrospector($tmpDir);
+        $expectedRev = $this->exec('git rev-parse HEAD', $this->currentTmpDir);
+
+        $introspector = new RepositoryIntrospector($this->currentTmpDir);
         $headRev = $introspector->getCurrentRevision();
 
-        file_put_contents($tmpDir.'/bar', 'bar');
-        $this->exec('git add . && git commit -m "adds bar"', $tmpDir);
+        $this->assertInternalType('string', $headRev);
+        $this->assertEquals($expectedRev, $headRev);
+    }
+
+    /**
+     * @expectedException \Symfony\Component\Process\Exception\ProcessFailedException
+     */
+    public function testGetCurrentRevisionFail()
+    {
+        $this->installRepository();
+
+        $introspector = new RepositoryIntrospector($this->currentTmpDir);
+        $headRev = $introspector->getCurrentRevision();
+    }
+
+    /**
+     * @depends testGetCurrentRevision
+     */
+    public function testGetCurrentParents()
+    {
+        $this->installRepository();
+
+        file_put_contents($this->currentTmpDir.'/foo', 'foo');
+        $this->exec('git add . && git commit -m "adds foo"', $this->currentTmpDir);
+
+        $introspector = new RepositoryIntrospector($this->currentTmpDir);
+        $headRev = $introspector->getCurrentRevision();
+
+        file_put_contents($this->currentTmpDir.'/bar', 'bar');
+        $this->exec('git add . && git commit -m "adds bar"', $this->currentTmpDir);
         $this->assertEquals(array($headRev), $introspector->getCurrentParents());
+    }
+
+    /**
+     * @expectedException \Symfony\Component\Process\Exception\ProcessFailedException
+     */
+    public function testGetCurrentParentsFail()
+    {
+        $this->installRepository();
+
+        $introspector = new RepositoryIntrospector($this->currentTmpDir);
+
+        $introspector->getCurrentParents();
+    }
+
+    /**
+     *
+     * @dataProvider providerTestGetRepositoryType
+     */
+    public function testGetRepositoryType($hosts, $exceptionName)
+    {
+        if (strlen($exceptionName) > 1) {
+            $this->setExpectedException($exceptionName);
+        }
+
+        $tmpDir = $this->getTempDir();
+        mkdir($tmpDir, 0777, true);
+        $introspector = new RepositoryIntrospector($tmpDir);
+
+        $reflection = new \ReflectionMethod($introspector, 'getRepositoryType');
+        $reflection->setAccessible(true);
+        $result = $reflection->invoke($introspector, $hosts);
+
+        $this->assertEquals($exceptionName, $result);
     }
 
     protected function tearDown()
@@ -47,27 +132,12 @@ class RepositoryInspectorTest extends \PHPUnit_Framework_TestCase
         }
     }
 
-    private function exec($cmd, $dir)
+    public function providerTestGetRepositoryType()
     {
-        $proc = new Process($cmd, $dir);
-        if ($proc->run() !== 0) {
-            throw new ProcessFailedException($proc);
-        }
-    }
-
-    private function getTempDir()
-    {
-        $tmpDir = tempnam(sys_get_temp_dir(), 'ocular-intro');
-        unlink($tmpDir);
-
-        return $this->tmpDirs[] = $tmpDir;
-    }
-
-    private function installRepository($url, $dir)
-    {
-        $proc = new Process('git clone '.$url.' '.$dir);
-        if (0 !== $proc->run()) {
-            throw new ProcessFailedException($proc);
-        }
+        return array(
+            array('github.com','g'),
+            array('bitbucket.org','b'),
+            array('gitlab.com','\LogicException')
+        );
     }
 }

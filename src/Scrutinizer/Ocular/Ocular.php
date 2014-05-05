@@ -37,7 +37,7 @@ class Ocular extends Application
     private function loadConfiguration()
     {
         $homeDir = getenv('HOME');
-        if ( ! is_file($homeDir.'/.ocular/config.json')) {
+        if (!is_file($homeDir.'/.ocular/config.json')) {
             return new Configuration();
         }
 
