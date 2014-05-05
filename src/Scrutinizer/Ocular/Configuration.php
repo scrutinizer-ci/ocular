@@ -3,9 +3,15 @@
 namespace Scrutinizer\Ocular;
 
 use PhpOption\Option;
+use JMS\Serializer\Annotation\Type;
 
 class Configuration
 {
+    /**
+     *
+     * @var string
+     * @Type("string")
+     */
     private $accessToken;
 
     public function __construct($accessToken = null)
