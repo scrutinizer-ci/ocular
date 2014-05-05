@@ -104,7 +104,7 @@ class UpdateCommandTest extends AbstractTestCaseClass
 
         if ($statusCode === '200') {
             $this->assertEquals(0, $result);
-        } elseif (substr($statusCode,0,1) === '4') {
+        } elseif (substr($statusCode, 0, 1) === '4') {
             $this->assertEquals(1, $result);
         }
     }

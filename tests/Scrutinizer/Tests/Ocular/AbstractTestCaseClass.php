@@ -69,8 +69,6 @@ abstract class AbstractTestCaseClass extends \PHPUnit_Framework_TestCase
         $objectReflection = new \ReflectionObject($object);
         $reflection = $objectReflection;
 
-//         $reflection->setAccessible(true);
-
         while ($reflection = $reflection->getParentClass()) {
             if ($reflection->hasProperty($propertyName)) {
                 break;

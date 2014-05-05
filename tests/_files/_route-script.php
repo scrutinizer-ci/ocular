@@ -1,6 +1,6 @@
 <?php
 
-if (@file_exists( __DIR__ . $_SERVER["REQUEST_URI"])) {
+if (@file_exists(__DIR__ . $_SERVER["REQUEST_URI"])) {
     return false;
 }
 

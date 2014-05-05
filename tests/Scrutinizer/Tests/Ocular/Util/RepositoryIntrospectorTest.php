@@ -7,7 +7,6 @@ use Scrutinizer\Tests\Ocular\AbstractTestCaseClass;
 
 use Symfony\Component\Filesystem\Filesystem;
 
-
 class RepositoryInspectorTest extends AbstractTestCaseClass
 {
 
@@ -15,7 +14,6 @@ class RepositoryInspectorTest extends AbstractTestCaseClass
     {
         $this->getTempDir(true, 0777);
     }
-
 
     /**
      * @expectedException \Symfony\Component\Process\Exception\ProcessFailedException
