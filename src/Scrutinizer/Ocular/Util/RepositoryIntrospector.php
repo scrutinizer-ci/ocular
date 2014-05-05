@@ -67,6 +67,12 @@ class RepositoryIntrospector
         }
     }
 
+    /**
+     *
+     * @param string $command
+     * @param string $dir
+     * @throws ProcessFailedException
+     */
     protected function exec($command, $dir = null)
     {
         $proc = new Process($command, $dir ?: $this->dir);
