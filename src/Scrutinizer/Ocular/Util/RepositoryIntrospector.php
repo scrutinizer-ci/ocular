@@ -31,6 +31,11 @@ class RepositoryIntrospector
         return explode(' ', trim($proc->getOutput()));
     }
 
+    /**
+     *
+     * @throws \RuntimeException
+     * @return string
+     */
     public function getQualifiedName()
     {
         $proc = $this->exec('git remote -v');
@@ -53,6 +58,12 @@ class RepositoryIntrospector
         throw new \RuntimeException(sprintf("Could not extract repository name from:\n%s", $output));
     }
 
+    /**
+     *
+     * @param string $host
+     * @throws \LogicException
+     * @return string
+     */
     private function getRepositoryType($host)
     {
         switch ($host) {
