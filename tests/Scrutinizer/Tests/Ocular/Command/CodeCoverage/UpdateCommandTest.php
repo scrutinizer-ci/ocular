@@ -4,16 +4,13 @@ namespace Scrutinizer\Tests\Ocular\Command\CodeCoverage;
 
 use Scrutinizer\Ocular\Command\CodeCoverage\UploadCommand;
 use Scrutinizer\Ocular\Util\RepositoryIntrospector;
-use Symfony\Component\Process\Process;
-use Symfony\Component\Process\Exception\ProcessFailedException;
+use Scrutinizer\Tests\Ocular\AbstractTestCaseClass;
+
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class UpdateCommandTest extends \PHPUnit_Framework_TestCase
+class UpdateCommandTest extends AbstractTestCaseClass
 {
-    protected $tmpDirs = array();
-    protected $currentTmpDir;
-
     /**
      *
      * @var UploadCommand
@@ -265,14 +262,6 @@ class UpdateCommandTest extends \PHPUnit_Framework_TestCase
         }
     }
 
-    protected function helperReflectionMethode($object, $methodeName)
-    {
-        $reflection = new \ReflectionMethod($object, $methodeName);
-        $reflection->setAccessible(true);
-
-        return $reflection;
-    }
-
     public function providerTestParseMethodWithNotEmpty()
     {
         return array(
@@ -302,46 +291,6 @@ class UpdateCommandTest extends \PHPUnit_Framework_TestCase
             array(true, '500'),
             array(false, '500'),
         );
-    }
-
-    private function exec($cmd, $dir = null)
-    {
-        $dir = $dir ?: $this->currentTmpDir;
-
-        $proc = new Process($cmd, $dir ?: $this->currentTmpDir);
-        if ($proc->run() !== 0) {
-            throw new ProcessFailedException($proc);
-        }
-
-        return trim($proc->getOutput());
-    }
-
-    private function cloneRepository($url, $dir = null)
-    {
-        $this->installRepository($dir);
-        $this->exec('git remote add origin ' . $url);
-    }
-
-    private function installRepository($dir = null)
-    {
-        $this->exec('git init', $dir);
-        $this->exec('git config user.email "scrutinizer-ci@github.com"', $dir);
-        $this->exec('git config user.name "Scrutinizer-CI"', $dir);
-    }
-
-    private function getTempDir($setDefault = true, $mkdir = false)
-    {
-        $tmpDir = tempnam(sys_get_temp_dir(), 'ocular-intro');
-        unlink($tmpDir);
-
-        if ($setDefault) {
-            $this->currentTmpDir = $tmpDir;
-        }
-        if ($mkdir) {
-            mkdir($tmpDir, $mkdir, true);
-        }
-
-        return $this->tmpDirs[] = $tmpDir;
     }
 
     /**

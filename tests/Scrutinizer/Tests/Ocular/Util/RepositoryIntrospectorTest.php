@@ -3,14 +3,13 @@
 namespace Scrutinizer\Tests\Ocular\Util;
 
 use Scrutinizer\Ocular\Util\RepositoryIntrospector;
-use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\Process\Exception\ProcessFailedException;
-use Symfony\Component\Process\Process;
+use Scrutinizer\Tests\Ocular\AbstractTestCaseClass;
 
-class RepositoryInspectorTest extends \PHPUnit_Framework_TestCase
+use Symfony\Component\Filesystem\Filesystem;
+
+
+class RepositoryInspectorTest extends AbstractTestCaseClass
 {
-    private $tmpDirs = array();
-    private $currentTmpDir;
 
     public function setUp()
     {
@@ -133,46 +132,6 @@ class RepositoryInspectorTest extends \PHPUnit_Framework_TestCase
         foreach ($this->tmpDirs as $dir) {
             $fs->remove($dir);
         }
-    }
-
-    private function exec($cmd, $dir = null)
-    {
-        $dir = $dir ?: $this->currentTmpDir;
-
-        $proc = new Process($cmd, $dir ?: $this->currentTmpDir);
-        if ($proc->run() !== 0) {
-            throw new ProcessFailedException($proc);
-        }
-
-        return trim($proc->getOutput());
-    }
-
-    private function getTempDir($setDefault = true, $mkdir = false)
-    {
-        $tmpDir = tempnam(sys_get_temp_dir(), 'ocular-intro');
-        unlink($tmpDir);
-
-        if ($setDefault) {
-            $this->currentTmpDir = $tmpDir;
-        }
-        if ($mkdir) {
-            mkdir($tmpDir, $mkdir, true);
-        }
-
-        return $this->tmpDirs[] = $tmpDir;
-    }
-
-    private function cloneRepository($url, $dir = null)
-    {
-        $this->installRepository($dir);
-        $this->exec('git remote add origin ' . $url);
-    }
-
-    private function installRepository($dir = null)
-    {
-        $this->exec('git init', $dir);
-        $this->exec('git config user.email "scrutinizer-ci@github.com"', $dir);
-        $this->exec('git config user.name "Scrutinizer-CI"', $dir);
     }
 
     public function providerTestGetRepositoryType()
