@@ -88,4 +88,18 @@ abstract class AbstractTestCaseClass extends \PHPUnit_Framework_TestCase
 
         return $reflectionProperty;
     }
+
+    /**
+     *
+     * @param string|object $object
+     * @param string $propertyName
+     * @return \ReflectionProperty
+     */
+    protected function skipIfPhpVersionDonotSupportBuildInServer()
+    {
+        if (version_compare(phpversion(), "5.4", '>=')) {
+            return;
+        }
+        $this->markTestSkipped("php lower then 5.4 don't support buildin Server");
+    }
 }

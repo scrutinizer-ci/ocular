@@ -43,6 +43,8 @@ class UpdateCommandTest extends AbstractTestCaseClass
      */
     public function testExecute($withCoverageFile, $statusCode = '200')
     {
+        $this->skipIfPhpVersionDonotSupportBuildInServer();
+
         $repositoryName = "scrutinizer-ocular";
         $accessToken = md5("success");
         $revision = md5('rev1');
@@ -197,16 +199,6 @@ class UpdateCommandTest extends AbstractTestCaseClass
         $reflection = $this->helperReflectionMethode($this->SUT, 'getBasePath');
         $result = $reflection->invoke($this->SUT);
     }
-
-//     /**
-//      * @expectedException \RuntimeException
-//      * @expectedExceptionMessage Please pass the format of the code coverage via the "--format" option, i.e. "--format=php-clover".
-//      */
-//     public function testParseFormatFail()
-//     {
-//         $reflection = $this->helperReflectionMethode($this->SUT, 'parseFormat');
-//         $reflection->invoke($this->SUT, null);
-//     }
 
     /**
      *
