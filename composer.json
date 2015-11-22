@@ -16,6 +16,6 @@
         "jms/serializer": "~0.13"
     },
     "require-dev": {
-        "symfony/filesystem": "~2.0"
+        "symfony/filesystem": "~2.0|~3.0"
     }
 }
