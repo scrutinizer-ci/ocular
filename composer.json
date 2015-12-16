@@ -3,8 +3,8 @@
 
     "bin": ["bin/ocular"],
     "autoload": {
-        "psr-0": {
-            "Scrutinizer\\Ocular\\": "src/"
+        "psr-4": {
+            "Scrutinizer\\Ocular\\": "src/Scrutinizer/Ocular"
         }
     },
 
