@@ -16,6 +16,7 @@
         "jms/serializer": "^1.0.0"
     },
     "require-dev": {
-        "symfony/filesystem": "~2.0|~3.0"
+        "symfony/filesystem": "~2.0|~3.0",
+        "phpunit/phpunit": "^4.8.0"
     }
 }
