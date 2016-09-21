@@ -19,30 +19,26 @@ class RepositoryIntrospector
 
     public function getCurrentRevision()
     {
-        $proc = new Process('git rev-parse HEAD', $this->dir);
-        if (0 !== $proc->run()) {
-            throw new ProcessFailedException($proc);
-        }
+        $proc = $this->exec('git rev-parse HEAD');
 
         return trim($proc->getOutput());
     }
 
     public function getCurrentParents()
     {
-        $proc = new Process('git log --pretty="%P" -n1 HEAD', $this->dir);
-        if (0 !== $proc->run()) {
-            throw new ProcessFailedException($proc);
-        }
+        $proc = $this->exec('git log --pretty="%P" -n1 HEAD');
 
         return explode(' ', trim($proc->getOutput()));
     }
 
+    /**
+     *
+     * @throws \RuntimeException
+     * @return string
+     */
     public function getQualifiedName()
     {
-        $proc = new Process('git remote -v', $this->dir);
-        if (0 !== $proc->run()) {
-            throw new ProcessFailedException($proc);
-        }
+        $proc = $this->exec('git remote -v');
 
         $output = $proc->getOutput();
 
@@ -62,6 +58,12 @@ class RepositoryIntrospector
         throw new \RuntimeException(sprintf("Could not extract repository name from:\n%s", $output));
     }
 
+    /**
+     *
+     * @param string $host
+     * @throws \LogicException
+     * @return string
+     */
     private function getRepositoryType($host)
     {
         switch ($host) {
@@ -73,6 +75,20 @@ class RepositoryIntrospector
 
             default:
                 throw new \LogicException(sprintf('Unknown host "%s".', $host));
+        }
+    }
+
+    /**
+     *
+     * @param string $command
+     * @param string $dir
+     * @throws ProcessFailedException
+     */
+    protected function exec($command, $dir = null)
+    {
+        $proc = new Process($command, $dir ?: $this->dir);
+        if (0 !== $proc->run()) {
+            throw new ProcessFailedException($proc);
         }
     }
 }
