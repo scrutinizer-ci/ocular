@@ -11,10 +11,22 @@ class RepositoryInspectorTest extends \PHPUnit_Framework_TestCase
 {
     private $tmpDirs = array();
 
-    public function testGetQualifiedName()
+    public function repoUrlProvider()
+    {
+        return [
+            ['git@github.com:schmittjoh/metadata.git'],
+            ['https://github.com/schmittjoh/metadata.git'],
+            ['https://ashon-ikon:2ae3578bfd30cbc9bb58861cf9f0fa742259cdb8@github.com/schmittjoh/metadata.git'],
+        ];
+    }
+
+    /**
+     * @dataProvider repoUrlProvider
+     */
+    public function testGetQualifiedName($url)
     {
         $tmpDir = $this->getTempDir();
-        $this->installRepository('https://github.com/schmittjoh/metadata.git', $tmpDir);
+        $this->installRepository($url, $tmpDir);
 
         $introspector = new RepositoryIntrospector($tmpDir);
         $this->assertEquals('g/schmittjoh/metadata', $introspector->getQualifiedName());
