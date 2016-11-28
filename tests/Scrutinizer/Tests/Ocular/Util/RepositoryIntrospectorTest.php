@@ -13,11 +13,11 @@ class RepositoryInspectorTest extends \PHPUnit_Framework_TestCase
 
     public function repoUrlProvider()
     {
-        return [
-            ['git@github.com:schmittjoh/metadata.git'],
-            ['https://github.com/schmittjoh/metadata.git'],
-            ['https://ashon-ikon:2ae3578bfd30cbc9bb58861cf9f0fa742259cdb8@github.com/schmittjoh/metadata.git'],
-        ];
+        return array(
+            array('git@github.com:schmittjoh/metadata.git'),
+            array('https://github.com/schmittjoh/metadata.git'),
+            array('https://ashon-ikon:2ae3578bfd30cbc9bb58861cf9f0fa742259cdb8@github.com/schmittjoh/metadata.git'),
+        );
     }
 
     /**
