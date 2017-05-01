@@ -102,7 +102,7 @@ class UploadCommand extends Command
     {
         $dir = getcwd();
         while ( ! empty($dir)) {
-            if (is_dir($dir.'/.git')) {
+            if (is_dir($dir.DIRECTORY_SEPARATOR.'.git')) {
                 return $dir;
             }
 
