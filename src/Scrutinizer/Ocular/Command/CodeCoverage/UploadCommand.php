@@ -93,7 +93,7 @@ class UploadCommand extends Command
     private function getCoverageData($file)
     {
         $content = file_get_contents($file);
-        $content = str_replace($this->getBasePath(), '{scrutinizer_project_base_path}', $content);
+        $content = str_replace($this->getBasePath(), '{scrutinizer_project_base_path}/', $content);
 
         return $content;
     }
@@ -102,8 +102,8 @@ class UploadCommand extends Command
     {
         $dir = getcwd();
         while ( ! empty($dir)) {
-            if (is_dir($dir.'/.git')) {
-                return $dir;
+            if (is_dir($dir.DIRECTORY_SEPARATOR.'.git')) {
+                return $dir.DIRECTORY_SEPARATOR;
             }
 
             $dir = dirname($dir);
