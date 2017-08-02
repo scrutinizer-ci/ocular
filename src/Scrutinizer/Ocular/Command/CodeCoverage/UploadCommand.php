@@ -2,11 +2,9 @@
 
 namespace Scrutinizer\Ocular\Command\CodeCoverage;
 
-use Guzzle\Http\Exception\BadResponseException;
-use Guzzle\Http\Exception\ClientErrorResponseException;
-use Guzzle\Http\Exception\ServerErrorResponseException;
-use Guzzle\Plugin\Backoff\BackoffPlugin;
-use Guzzle\Service\Client;
+use GuzzleHttp\Exception\BadResponseException;
+use GuzzleHttp\Exception\ClientErrorResponseException;
+use GuzzleHttp\Client;
 use Scrutinizer\Ocular\Util\RepositoryIntrospector;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -23,7 +21,7 @@ class UploadCommand extends Command
             ->setName('code-coverage:upload')
             ->setDescription('Uploads code coverage information for an inspection to Scrutinizer.')
             ->addArgument('coverage-file', InputArgument::REQUIRED, 'The path to the code coverage file.')
-            ->addOption('api-url', null, InputOption::VALUE_REQUIRED, 'The base URL of the API.', 'https://scrutinizer-ci.com/api')
+            ->addOption('api-url', null, InputOption::VALUE_REQUIRED, 'The base URL of the API.', 'https://scrutinizer-ci.com/api/')
             ->addOption('repository', null, InputOption::VALUE_REQUIRED, 'The qualified repository name of your repository (GitHub: g/login/username; Bitbucket: b/login/username).')
             ->addOption('revision', null, InputOption::VALUE_REQUIRED, 'The revision that the code coverage information belongs to (defaults to git rev-parse HEAD).')
             ->addOption('format', null, InputOption::VALUE_REQUIRED, 'The format of the code coverage file. Currently supported: php-clover')
@@ -35,14 +33,11 @@ class UploadCommand extends Command
     {
         $repositoryName = $this->parseRepositoryName($input->getOption('repository'));
 
-        $client = new Client($input->getOption('api-url').'{?access_token}', array(
-            'access_token' => $input->getOption('access-token'),
-            'request.options' => array(
-                'Content-Type' => 'application/json',
-            )
+        $client = new Client(array(
+            'base_uri' => $input->getOption('api-url'),
+            'query' => array('access_token' => $input->getOption('access-token')),
         ));
-        $client->addSubscriber(BackoffPlugin::getExponentialBackoff());
-
+        
         $postData = $this->generatePostData($input);
         if ( ! isset($postData['coverage'])) {
             $output->write(sprintf('Notifying that no code coverage data is available for repository "%s" and revision "%s"... ', $repositoryName, $postData['revision']));
@@ -51,19 +46,15 @@ class UploadCommand extends Command
         }
 
         try {
-            $client->post(
-                'repositories/'.$repositoryName.'/data/code-coverage{?access_token}',
-                null,
-                json_encode($postData)
-            )->send();
+            $client->post('repositories/'.$repositoryName.'/data/code-coverage', array('json' => $postData));
             $output->writeln('Done');
 
             return 0;
         } catch (BadResponseException $ex) {
             $output->writeln("<error>Failed</error>");
 
-            if ($ex instanceof ClientErrorResponseException) {
-                $output->writeln('<error>'.$ex->getResponse()->getBody(true).'</error>');
+            if ($ex instanceof ClientException) {
+                $output->writeln('<error>' . \Psr7\str($e->getResponse()) . '</error>');
 
                 return 1;
             }
