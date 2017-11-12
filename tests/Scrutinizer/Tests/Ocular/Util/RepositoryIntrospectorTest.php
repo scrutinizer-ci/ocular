@@ -2,12 +2,13 @@
 
 namespace Scrutinizer\Tests\Ocular\Util;
 
+use PHPUnit\Framework\TestCase;
 use Scrutinizer\Ocular\Util\RepositoryIntrospector;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
-class RepositoryInspectorTest extends \PHPUnit_Framework_TestCase
+class RepositoryInspectorTest extends TestCase
 {
     private $tmpDirs = array();
 
