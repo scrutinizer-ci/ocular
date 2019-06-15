@@ -13,7 +13,5 @@
     "replacements": {
         "revision": "HEAD"
     },
-    "main": "bin/ocular",
-    "output": "ocular.phar",
-    "stub": true
+    "output": "ocular.phar"
 }

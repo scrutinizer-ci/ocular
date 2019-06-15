@@ -1,6 +1,5 @@
 {
     "require-dev": {
-        "humbug/box": "^3.0@alpha",
-        "humbug/php-scoper": "^1.0@dev"
+        "humbug/box": "^3.8"
     }
 }
