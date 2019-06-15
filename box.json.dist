@@ -1,14 +1,7 @@
 {
-    "directories": [
-        "src/",
-        "vendor/"
-    ],
     "directories-bin": [
         "vendor/jms/serializer/src/JMS/Serializer/Annotation/",
         "vendor/doctrine/annotations/lib/Doctrine/Common/Annotations/Annotation/"
-    ],
-    "files": [
-        "bin/ocular"
     ],
     "replacements": {
         "revision": "HEAD"
