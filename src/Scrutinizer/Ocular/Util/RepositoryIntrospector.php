@@ -29,7 +29,7 @@ class RepositoryIntrospector
 
     public function getCurrentParents()
     {
-        $proc = new Process(['git', 'log', '--pretty="%P"', '-n1', 'HEAD'], $this->dir);
+        $proc = new Process(['git', 'log', '--pretty=%P', '-n1', 'HEAD'], $this->dir);
         if (0 !== $proc->run()) {
             throw new ProcessFailedException($proc);
         }
