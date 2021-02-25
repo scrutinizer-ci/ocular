@@ -34,7 +34,12 @@ class RepositoryIntrospector
             throw new ProcessFailedException($proc);
         }
 
-        return explode(' ', trim($proc->getOutput()));
+        $output = trim($proc->getOutput());
+        if ($output === '') {
+            throw new \RuntimeException('Failed to retrieve commit parents. If you use a shallow git checkout, please checkout at least a depth of one.');
+        }
+
+        return explode(' ', $output);
     }
 
     public function getQualifiedName()
