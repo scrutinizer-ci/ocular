@@ -4,6 +4,7 @@ namespace Scrutinizer\Ocular;
 
 use JMS\Serializer\SerializerBuilder;
 use Symfony\Component\Console\Application;
+use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputOption;
 
 class Ocular extends Application
@@ -20,7 +21,7 @@ class Ocular extends Application
         $this->registerCommands();
     }
 
-    protected function getDefaultInputDefinition()
+    protected function getDefaultInputDefinition(): InputDefinition
     {
         $definition = parent::getDefaultInputDefinition();
         $definition->addOption(new InputOption('access-token', null, InputOption::VALUE_REQUIRED, 'The access token to use when communicating with scrutinizer-ci.com', $this->cfg->getAccessToken()->getOrElse(null)));
